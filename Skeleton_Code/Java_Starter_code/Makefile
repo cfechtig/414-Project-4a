@@ -4,7 +4,7 @@ JFLAGS=-g
 JC = javac
 
 #Use to incorporate libraries at run-time
-CPFLAGS = # -cp .:./library.jar
+CPFLAGS = -cp .:./jackson-annotations-2.13.2.jar:jackson-core-2.13.2.jar:jackson-databind-2.13.2.2.jar
 
 gradebookadd:
 	$(JC) $(JFLAGS) gradebookadd.java Gradebook.java

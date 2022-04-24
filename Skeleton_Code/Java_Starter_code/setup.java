@@ -1,7 +1,6 @@
 import java.io.File;
 
 /*
-
   // Constraints:
   // name -> alhpanumeric characters including underscores and periods
       for adding student: if name already exists: error occurs
@@ -15,32 +14,8 @@ import java.io.File;
   // grade -> >=0
       for adding grade: if student name OR assignment doesnt exist: error occurs
       if grade for this assignment is already there, then replace it 
+*/
 
-
-  class Assignment {
-    public String name;
-    public Integer points;
-    public float weight;
-  };
-
-  class Student {
-    public String first;
-    public String last;
-  }
-
-  class Grade {
-    Student student;
-    Assignment assignment;
-    Int grade;
-  }
-
-  class GradeBook {
-    String course;
-    Set<Assignmment> assignments;
-    Set<Student> students;
-    Set<Grade> grades;
-  };
-  */
 /**
  * Initialize gradebook with specified name and generate a key.
  */
@@ -49,7 +24,7 @@ public class setup {
   /* test whether the file exists */
   private static boolean file_test(String filename) {
     File tempfile = new File(filename);
-    if (tempfile.exists() == true) {
+    if (tempfile.exists()) {
       System.out.print("invalid");
       System.exit(-1);
     }
@@ -57,6 +32,7 @@ public class setup {
   }
 
   public static void main(String[] args) {
+    //TODO: generate good key
     String key = "hello";
 
     if (args.length < 2) {
@@ -72,7 +48,7 @@ public class setup {
 
     Gradebook gb = new Gradebook();
     gb.writeToFile(filename);
-  /* add your code here */
+    /* add your code here */
 
     System.out.println("Key is: " + key);
 

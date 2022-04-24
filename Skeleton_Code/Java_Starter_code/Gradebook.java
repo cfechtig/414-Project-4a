@@ -11,58 +11,59 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 class Grade {
-	public String assignment;
-	public Integer grade;
+  public String assignment;
+  public Integer grade;
 
-	public Grade(String as, Integer g) {
-		this.assignment = as;
-		this.grade = g;
-	}
+  public Grade(String as, Integer g) {
+    this.assignment = as;
+    this.grade = g;
+  }
 
-	public Grade() {}
+  public Grade() {}
 
 };
 
 class Assignment {
-	public String name;
-	public Integer points;
-	public Float weight;
+  public String name;
+  public Integer points;
+  public Float weight;
 
-	@Override
-	public boolean equals(Object a) {
-		if (a == this) return true;
-    		if (!(a instanceof Assignment)) return false;
-		
-		Assignment a1 = (Assignment) a;
-		return a1.name.equals(name);
-	}
-	
-	@Override
-	public int hashCode() {
-		return name.hashCode();
-	}
+  @Override
+  public boolean equals(Object a) {
+    if (a == this)
+      return true;
+    if (!(a instanceof Assignment))
+      return false;
 
-	public Assignment(String n, int p, Float w) {
-		name = n;
-		points = p;
-		weight = w;
-	}
-	
-	public Assignment() {}
-	
+    Assignment a1 = (Assignment) a;
+    return a1.name.equals(name);
+  }
+
+  @Override
+  public int hashCode() {
+    return name.hashCode();
+  }
+
+  public Assignment(String n, int p, Float w) {
+    name = n;
+    points = p;
+    weight = w;
+  }
+
+  public Assignment() {}
+
 };
+
 public class Gradebook {
   public Set<Assignment> assignments;
-	public Set<String> students; /*Student first-last name*/
-	public Map<String /*Student first-last name*/, Grade> grades;
-
+  public Set<String> students; /* Student first-last name */
+  public Map<String /* Student first-last name */, Grade> grades;
 
   /* Create a new gradebook */
   public Gradebook() {
     assignments = new HashSet<>();
-		students = new HashSet<>();
-		grades = new HashMap<>();
-
+    students = new HashSet<>();
+    grades = new HashMap<>();
   }
 
   public static Gradebook loadFromFile(String filename) {
@@ -77,81 +78,75 @@ public class Gradebook {
     try {
       File f = new File(filename);
 
-    FileReader fr = new FileReader(f);
+      FileReader fr = new FileReader(f);
 
-    char[] buf = new char[(int)f.length()];
-    fr.read(buf);
-    fr.close();
+      char[] buf = new char[(int) f.length()];
+      fr.read(buf);
+      fr.close();
 
-    json = new String(buf);
+      json = new String(buf);
     } catch (Exception e) {
       System.out.println("Failed to read to " + filename + " " + e);
-        return null;
+      return null;
     }
 
     try {
-
-   ObjectMapper mapper = new ObjectMapper();
-   mapper.enable(SerializationFeature.INDENT_OUTPUT); 
-   return mapper.readValue(json, Gradebook.class);
-    }
-   catch (JsonProcessingException e) {
-     return null;
-      
+      ObjectMapper mapper = new ObjectMapper();
+      mapper.enable(SerializationFeature.INDENT_OUTPUT);
+      return mapper.readValue(json, Gradebook.class);
+    } catch (JsonProcessingException e) {
+      return null;
     }
   }
 
   public boolean writeToFile(String filename) {
-    //Convert this to a JSON 
+    // Convert this to a JSON
     // Create ObjectMapper object.
     String json;
     try {
       ObjectMapper mapper = new ObjectMapper();
-      mapper.enable(SerializationFeature.INDENT_OUTPUT); 
+      mapper.enable(SerializationFeature.INDENT_OUTPUT);
       json = mapper.writeValueAsString(this);
     } catch (JsonProcessingException e) {
-
       return false;
-
     }
 
-     /*
+    /*
      * TODO:
      * Encrypt the JSON-string
      * Sign the the encrypted data
      * Write output to supplied file
      */
 
-     /*
-      * Recreate the file
-      */
-      try {
+    /*
+     * Recreate the file
+     */
+    try {
       File f = new File(filename);
 
       f.delete();
       f.createNewFile();
 
-    FileWriter fw = new FileWriter(f);
-    fw.write(json);
-    fw.close();
-      } catch (Exception e) {
-        System.out.println("Failed to write to " + filename + " " + e);
-        return false;
-      }
-
-      return true;
+      FileWriter fw = new FileWriter(f);
+      fw.write(json);
+      fw.close();
+    } catch (Exception e) {
+      System.out.println("Failed to write to " + filename + " " + e);
+      return false;
+    }
+    return true;
   }
-
 
   /* Adds a student to the gradebook */
   public void addStudent(String first, String last) {
     // TODO: Validate
+    
     students.add(first + "-" + last);
   }
 
   /* Adds an assinment to the gradebook */
   public void addAssignment(String name, int points, float weight) {
-  // TODO: Validate
+    // TODO: Validate
 
     assignments.add(new Assignment(name, points, Float.valueOf(weight)));
   }
@@ -161,14 +156,16 @@ public class Gradebook {
     String firstlast = first + "-" + last;
 
     // TODO: Validate
-    if (!assignments.contains(assignment)) return;
-    if (!students.contains(firstlast)) return;
+
+    if (!assignments.contains(assignment))
+      return;
+    if (!students.contains(firstlast))
+      return;
 
     grades.put(firstlast, new Grade(assignment, grade));
   }
 
   public String toString() {
-
     return "";
   }
 }
