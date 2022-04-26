@@ -23,6 +23,7 @@ public class setup {
 
   /* test whether the file exists */
   private static boolean file_test(String filename) {
+    //TODO: check filename is alphanumeric
     File tempfile = new File(filename);
     if (tempfile.exists()) {
       System.out.print("invalid");

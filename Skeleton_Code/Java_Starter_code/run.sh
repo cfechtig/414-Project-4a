@@ -1,0 +1,1 @@
+java -ea -cp .:./jackson-core-2.13.2.jar:jackson-annotations-2.13.2.jar:./jackson-databind-2.13.2.2.jar gradebookadd -N

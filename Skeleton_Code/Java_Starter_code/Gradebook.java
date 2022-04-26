@@ -1,27 +1,17 @@
 import java.util.Map;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.HashMap;
 import java.util.Set;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.FileReader;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-
-class Grade {
-  public String assignment;
-  public Integer grade;
-
-  public Grade(String as, Integer g) {
-    this.assignment = as;
-    this.grade = g;
-  }
-
-  public Grade() {}
-
-};
 
 class Assignment {
   public String name;
@@ -49,21 +39,24 @@ class Assignment {
     points = p;
     weight = w;
   }
-
-  public Assignment() {}
-
 };
 
 public class Gradebook {
-  public Set<Assignment> assignments;
-  public Set<String> students; /* Student first-last name */
-  public Map<String /* Student first-last name */, Grade> grades;
+  // {studentName}
+  public Set<String> students;
+  // {assignmentName: (assignmentName, assignmentPoints, assignmentWeight)}
+  public Hashtable<String, Assignment> assignments;
+  // {studentName: {assignmentName: grade}}
+  public Hashtable<String, Hashtable<String, Integer>> s_grades;
+  // {assignmentName: {studentName: grade}}
+  public Hashtable<String, Hashtable<String, Integer>> a_grades;
 
   /* Create a new gradebook */
   public Gradebook() {
-    assignments = new HashSet<>();
-    students = new HashSet<>();
-    grades = new HashMap<>();
+    students = new HashSet<String>();
+    assignments = new Hashtable<String, Assignment>();
+    s_grades = new Hashtable<String, Hashtable<String, Integer>>();
+    a_grades = new Hashtable<String, Hashtable<String, Integer>>();
   }
 
   public static Gradebook loadFromFile(String filename) {
@@ -137,32 +130,109 @@ public class Gradebook {
     return true;
   }
 
-  /* Adds a student to the gradebook */
-  public void addStudent(String first, String last) {
-    // TODO: Validate
-    
-    students.add(first + "-" + last);
+  /* Adds an assinment to the gradebook */
+  public void addAssignment(String assignmentName, String points, String weight) throws Exception {
+    Pattern assignmentName_p = Pattern.compile("^[a-zA-Z0-9]+$");
+    Pattern points_p = Pattern.compile("^[0-9]+$");
+    Pattern weight_p = Pattern.compile("^(?:0*(?:\\.\\d+)?|1(\\.0*)?)$");
+    if (assignmentName_p.matcher(assignmentName).find() && 
+        points_p.matcher(points).find() && 
+        weight_p.matcher(weight).find() && 
+        !assignments.containsKey(assignmentName) && 
+        sumWeights()+Float.valueOf(weight) <= 1) {
+      assignments.put(assignmentName, new Assignment(assignmentName, Integer.valueOf(points), Float.valueOf(weight)));
+    } else {
+      throw new Exception();
+    }
   }
 
-  /* Adds an assinment to the gradebook */
-  public void addAssignment(String name, int points, float weight) {
-    // TODO: Validate
+  /* Deletes an assinment from the gradebook */
+  public void deleteAssignment(String assignmentName) throws Exception {
+    Pattern assignmentName_p = Pattern.compile("^[a-zA-Z0-9]+$");
+    if (assignmentName_p.matcher(assignmentName).find() && 
+        assignments.containsKey(assignmentName)) {
+      assignments.remove(assignmentName);
+    } else {
+      throw new Exception();
+    }
+  }
 
-    assignments.add(new Assignment(name, points, Float.valueOf(weight)));
+  /* Adds a student to the gradebook */
+  public void addStudent(String first, String last) throws Exception {
+    Pattern name_p = Pattern.compile("^[a-zA-Z]+$");
+    if (name_p.matcher(first).find() && 
+        name_p.matcher(last).find() && 
+        !students.contains(last + ", " + first)) {
+      students.add(last + ", " + first);
+    } else {
+      throw new Exception();
+    }
+  }
+
+  /* Deletes a student from the gradebook */
+  public void deleteStudent(String first, String last) throws Exception {
+    Pattern name_p = Pattern.compile("^[a-zA-Z]+$");
+    if (name_p.matcher(first).find() && 
+        name_p.matcher(last).find() && 
+        students.contains(last + ", " + first)) {
+      students.remove(last + ", " + first);
+    } else {
+      throw new Exception();
+    }
   }
 
   /* Adds a grade to the gradebook */
-  public void addGrade(String assignment, String first, String last, int grade) {
-    String firstlast = first + "-" + last;
+  public void addGrade(String assignmentName, String first, String last, String grade) throws Exception {
+    Pattern assignmentName_p = Pattern.compile("^[a-zA-Z]+$");
+    Pattern name_p = Pattern.compile("^[a-zA-Z]+$");
+    Pattern grade_p = Pattern.compile("^[0-9]+$");
+    if (assignmentName_p.matcher(assignmentName).find() && 
+        name_p.matcher(first).find() && 
+        name_p.matcher(last).find() && 
+        grade_p.matcher(grade).find() && 
+        students.contains(last + ", " + first) && 
+        assignments.containsKey(assignmentName)) {
 
-    // TODO: Validate
+      String firstlast = last + ", " + first;
 
-    if (!assignments.contains(assignment))
-      return;
-    if (!students.contains(firstlast))
-      return;
+      if (s_grades.containsKey(firstlast)) {
+        s_grades.get(firstlast).put(assignmentName, Integer.valueOf(grade));
+      } else {
+        s_grades.put(firstlast, new Hashtable<String, Integer>());
+        s_grades.get(firstlast).put(assignmentName, Integer.valueOf(grade));
+      }
 
-    grades.put(firstlast, new Grade(assignment, grade));
+      if (a_grades.containsKey(assignmentName)) {
+        a_grades.get(assignmentName).put(firstlast, Integer.valueOf(grade));
+      } else {
+        a_grades.put(assignmentName, new Hashtable<String, Integer>());
+        a_grades.get(assignmentName).put(firstlast, Integer.valueOf(grade));
+      }
+
+    } else {
+      throw new Exception();
+    }
+  }
+
+  public void printAssignment(String assignmentName, String order) {
+    
+  }
+
+  public void printStudent(String first, String last) {
+    
+  }
+
+  public void printFinal(String order) {
+    
+  }
+
+  private float sumWeights() {
+    float sum = 0;
+    for (Assignment a: assignments.values()){
+      sum += a.weight;
+    }
+
+    return sum;
   }
 
   public String toString() {
