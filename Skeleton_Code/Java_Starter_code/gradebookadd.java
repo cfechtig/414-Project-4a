@@ -37,7 +37,7 @@ class ParsedObject {
   }
 
   public String[] get_actionArgs(){
-    return actionsArgs;
+    return actionsArgs.clone();
   }
 
   public boolean get_legit(){
@@ -50,14 +50,6 @@ class ParsedObject {
  * or add a grade for an existing student and existing assignment
  */
 public class gradebookadd {
-
-  static final Hashtable<String, String[]> actions = new Hashtable<String, String[]>() {{
-    put("-AA", new String[]{"-AN", "-P", "-W"});
-    put("-DA", new String[]{"-AN"});
-    put("-AS", new String[]{"-FN", "-LN"});
-    put("-DS", new String[]{"-FN", "-LN"});
-    put("-AG", new String[]{"-FN", "-LN", "-AN", "-G"});
-  }};
 
   private static boolean verify_filename(String filename) {
     // add '.json' requirement?
@@ -75,7 +67,9 @@ public class gradebookadd {
     return p.matcher(action).find();
   }
 
-  private static boolean parse_actionArgs(String action, String[] actionArgs) {
+  private static String[] parse_actionArgs(String action, String[] actionArgs) {
+    // check that actionArgs contains even number of arguments
+    if (actionArgs.length%2 != 0) return null;
     if (action.equals("-AA")) {
       // verify add assignment
       String assignmentName = "", assignmentPoints = "", assignmentWeight = "";
@@ -87,39 +81,102 @@ public class gradebookadd {
         } else if (actionArgs[i].equals("-W")) {
           assignmentWeight = actionArgs[i+1];
         } else {
-          return false;
+          return null;
         }
       }
       if (assignmentName.length() != 0 &&
           assignmentPoints.length() != 0 &&
           assignmentWeight.length() != 0) {
-        okay
+        return new String[]{assignmentName, assignmentPoints, assignmentWeight};
       } else {
-        not okay
+        return null;
       }
 
     } else if (action.equals("-DA")) {
       // verify delete assignment
-      
+      String assignmentName = "";
+      for (int i = 0; i < actionArgs.length; i += 2) {
+        if (actionArgs[i].equals("-AN")) {
+          assignmentName = actionArgs[i+1];
+        } else {
+          return null;
+        }
+      }
+      if (assignmentName.length() != 0) {
+        return new String[]{assignmentName};
+      } else {
+        return null;
+      }
 
     } else if (action.equals("-AS")) {
       // verify add student
-
+      String firstName = "", lastName = "";
+      for (int i = 0; i < actionArgs.length; i += 2) {
+        if (actionArgs[i].equals("-FN")) {
+          firstName = actionArgs[i+1];
+        } else if (actionArgs[i].equals("-LN")) {
+          lastName = actionArgs[i+1];
+        } else {
+          return null;
+        }
+      }
+      if (firstName.length() != 0 &&
+          lastName.length() != 0) {
+        return new String[]{firstName, lastName};
+      } else {
+        return null;
+      }
       
     } else if (action.equals("-DS")) {
       // verify delete student
-
+      String firstName = "", lastName = "";
+      for (int i = 0; i < actionArgs.length; i += 2) {
+        if (actionArgs[i].equals("-FN")) {
+          firstName = actionArgs[i+1];
+        } else if (actionArgs[i].equals("-LN")) {
+          lastName = actionArgs[i+1];
+        } else {
+          return null;
+        }
+      }
+      if (firstName.length() != 0 &&
+          lastName.length() != 0) {
+        return new String[]{firstName, lastName};
+      } else {
+        return null;
+      }
       
     } else if (action.equals("-AG")) {
       // verify add grade
-
+      String firstName = "", lastName = "", assignmentName = "", grade = "";
+      for (int i = 0; i < actionArgs.length; i += 2) {
+        if (actionArgs[i].equals("-FN")) {
+          firstName = actionArgs[i+1];
+        } else if (actionArgs[i].equals("-LN")) {
+          lastName = actionArgs[i+1];
+        } else if (actionArgs[i].equals("-AN")) {
+          assignmentName = actionArgs[i+1];
+        } else if (actionArgs[i].equals("-G")) {
+          grade = actionArgs[i+1];
+        } else {
+          return null;
+        }
+      }
+      if (firstName.length() != 0 &&
+          lastName.length() != 0 &&
+          assignmentName.length() != 0 &&
+          grade.length() != 0) {
+        return new String[]{firstName, lastName, assignmentName, grade};
+      } else {
+        return null;
+      }
       
     } else {
       // if none of the above
-      System.out.println("This should not be possible...");
+      System.out.println("Invalid action");
     }
     
-    return false;
+    return null;
   }
 
   /* parses the cmdline to keep main method simplified */
@@ -136,9 +193,11 @@ public class gradebookadd {
         verify_filename(args[1]) &&
         args[2].equals("-K") &&
         verify_key(args[3]) &&
-        verify_action(args[4]) &&
-        verify_actionArgs(args[4], Arrays.copyOfRange(args, 5, args.length))) {
-      po.set_vals(args[1], args[3], args[4], Arrays.copyOfRange(args, 5, args.length));
+        verify_action(args[4])) {
+      String[] actionArgs = parse_actionArgs(args[4], Arrays.copyOfRange(args, 5, args.length));
+      if (actionArgs != null) {
+        po.set_vals(args[1], args[3], args[4], actionArgs);
+      }
     }
 
     return po;
@@ -151,16 +210,17 @@ public class gradebookadd {
       Gradebook gb = Gradebook.loadFromFile(po.get_filename());
 
       try {
-        if (po.get_action().equals("AA")) {
-          gb.addAssignment(assignmentName, points, weight);
-        } else if (po.get_action().equals("DA")) {
-          gb.deleteAssignment(assignmentName);
-        } else if (po.get_action().equals("AS")) {
-          gb.addStudent(first, last);
-        } else if (po.get_action().equals("DS")) {
-          gb.deleteStudent(first, last);
-        } else if (po.get_action().equals("AG")) {
-          gb.addGrade(assignmentName, first, last, grade);
+        String[] a_args = po.get_actionArgs();
+        if (po.get_action().equals("-AA")) {
+          gb.addAssignment(a_args[0], a_args[1], a_args[2]);
+        } else if (po.get_action().equals("-DA")) {
+          gb.deleteAssignment(a_args[0]);
+        } else if (po.get_action().equals("-AS")) {
+          gb.addStudent(a_args[0], a_args[1]);
+        } else if (po.get_action().equals("-DS")) {
+          gb.deleteStudent(a_args[0], a_args[1]);
+        } else if (po.get_action().equals("-AG")) {
+          gb.addGrade(a_args[0], a_args[1], a_args[2], a_args[3]);
         } else {
           System.out.println("This should not be possible...");
           System.out.println("Invalid");
