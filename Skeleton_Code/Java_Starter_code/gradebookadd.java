@@ -1,7 +1,7 @@
+import java.io.File;
 import java.util.Arrays;
-import java.util.Hashtable;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 class ParsedObject {
   private String filename, key, action;
@@ -52,9 +52,15 @@ class ParsedObject {
 public class gradebookadd {
 
   private static boolean verify_filename(String filename) {
-    // add '.json' requirement?
     Pattern p = Pattern.compile("^[a-zA-Z0-9_\\.]+$");
-    return p.matcher(filename).find();
+    if (p.matcher(filename).find()) {
+      File tempfile = new File(filename);
+      // file SHOULD exist
+      if (tempfile.exists()) {
+        return true;
+      }
+    } 
+    return false;
   }
 
   private static boolean verify_key(String key) {
@@ -183,10 +189,11 @@ public class gradebookadd {
   private static ParsedObject parse_cmdline(String[] args) {
     ParsedObject po = new ParsedObject();
 
-    System.out.println("\nNumber Of Arguments Passed: " + args.length);
-    System.out.println("----Following Are The Command Line Arguments Passed----");
-    for(int counter=0; counter < args.length; counter++)
-      System.out.println("args[" + counter + "]: " + args[counter]);
+    // System.out.println("\nNumber Of Arguments Passed: " + args.length);
+    // System.out.println("----Following Are The Command Line Arguments Passed----");
+    // for(int counter=0; counter < args.length; counter++)
+    //   System.out.println("args[" + counter + "]: " + args[counter]);
+    // System.out.println();
 
     if (args.length>5 &&
         args[0].equals("-N") &&
@@ -206,11 +213,22 @@ public class gradebookadd {
   public static void main(String[] args) {
     ParsedObject po = parse_cmdline(args);
 
-    if(po.get_legit()) {
-      Gradebook gb = Gradebook.loadFromFile(po.get_filename());
+    // System.out.println("legit: " + po.get_legit());
+    // System.out.println("filename: " + po.get_filename());
+    // System.out.println("key: " + po.get_key());
+    // System.out.println("action: " + po.get_action());
+    // System.out.println("a_rgs: " + Arrays.toString(po.get_actionArgs()));
+    // System.out.println();
 
+    if(po.get_legit()) {
       try {
+        Gradebook gb = Gradebook.loadFromFile(po.get_filename(), po.get_key());
+        if (gb==null) {
+          System.out.println("gb is NULL!!!");
+          System.out.println();
+        }
         String[] a_args = po.get_actionArgs();
+
         if (po.get_action().equals("-AA")) {
           gb.addAssignment(a_args[0], a_args[1], a_args[2]);
         } else if (po.get_action().equals("-DA")) {
@@ -226,13 +244,18 @@ public class gradebookadd {
           System.out.println("Invalid");
           System.exit(255);
         }
+
+        gb.writeToFile(po.get_filename(), po.get_key());
       } catch(Exception E) {
+        System.out.println(E);
         System.out.println("Invalid");
         System.exit(255);
       }
     } else {
+      System.out.println("Parse Failed");
       System.out.println("Invalid");
       System.exit(255);
     }
   }
+
 }
